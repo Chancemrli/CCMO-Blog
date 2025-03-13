@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bluebell_backend/pkg/errcode"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,4 +38,11 @@ func ResponseSuccess(ctx *gin.Context, data interface{}) {
 		Data:    data,
 	}
 	ctx.JSON(http.StatusOK, rd)
+}
+
+func ResponseWithStatus(ctx *gin.Context, status errcode.Status, data interface{}) {
+	ctx.JSON(errcode.GetHttpCode(status.Code), gin.H{
+		"status": status,
+		"data":   data,
+	})
 }

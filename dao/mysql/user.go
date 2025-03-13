@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 )
 
-const secret = "liwenzhou.com"
+const secret = "ccmo_blo.com"
 
 func encryptPassword(data []byte) (result string) {
 	h := md5.New()

@@ -33,7 +33,30 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/comment", controller.CommentHandler)
 		v1.GET("/comment", controller.CommentListHandler)
 
+		v1.GET("/ranksystem", controller.RankSystemHandler)
+
 		v1.GET("/ping", func(c *gin.Context) {
+			c.String(http.StatusOK, "pong")
+		})
+
+	}
+
+	v2 := r.Group("/api/v2")
+	v2.GET("/ranksystem", controller.RankSystemHandler)
+	v2.Use(controller.JWTAuthMiddleware())
+	{
+		v2.POST("/post", controller.CreatePostHandler)
+		v2.GET("/post/:id", controller.PostDetailHandler)
+		v2.POST("/update/:id", controller.UpdatePostHandler)
+		v2.GET("/post", controller.PostListHandler)
+
+		v2.POST("/comment", controller.CommentHandler)
+		v2.GET("/comment", controller.CommentListHandler)
+
+		v2.POST("/like/:id", controller.LikePostHandler)
+		v2.POST("/unlike/:id", controller.UnlikePostHandler)
+
+		v2.GET("/ping", func(c *gin.Context) {
 			c.String(http.StatusOK, "pong")
 		})
 

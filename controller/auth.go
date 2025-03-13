@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"bluebell_backend/dao/redis"
 	"bluebell_backend/pkg/jwt"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +22,7 @@ var (
 // JWTAuthMiddleware 基于JWT的认证中间件
 func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URI
+		// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URL
 		// 这里假设Token放在Header的Authorization中，并使用Bearer开头
 		// 这里的具体实现方式要依据你的实际业务情况决定
 		authHeader := c.Request.Header.Get("Authorization")
@@ -36,9 +38,23 @@ func JWTAuthMiddleware() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		// parts[1]是获取到的tokenString，我们使用之前定义好的解析JWT的函数来解析它
+		// parts[1]是获取到的tokenString，使用之前定义好的解析JWT的函数来解析它
 		mc, err := jwt.ParseToken(parts[1])
 		if err != nil {
+			fmt.Println(err)
+			ResponseError(c, CodeInvalidToken)
+			c.Abort()
+			return
+		}
+		// 检查token有没有被篡改
+		redisToken, err := redis.GetToken(strconv.FormatUint(mc.UserID, 10))
+		if err != nil {
+			fmt.Println(err)
+			ResponseError(c, CodeServerWrong)
+			c.Abort()
+			return
+		}
+		if strings.Compare(redisToken, parts[1]) != 0 {
 			fmt.Println(err)
 			ResponseError(c, CodeInvalidToken)
 			c.Abort()

@@ -10,4 +10,5 @@ var (
 	ErrorInvalidID     = errors.New("无效的ID")
 	ErrorQueryFailed   = errors.New("查询数据失败")
 	ErrorInsertFailed  = errors.New("插入数据失败")
+	ErrorUpdateFailed  = errors.New("更新数据失败")
 )

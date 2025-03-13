@@ -2,11 +2,13 @@ package controller
 
 import (
 	"bluebell_backend/dao/mysql"
+	"bluebell_backend/dao/redis"
 	"bluebell_backend/models"
 	"bluebell_backend/pkg/jwt"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -51,6 +53,12 @@ func LoginHandler(c *gin.Context) {
 	}
 	// 生成Token
 	aToken, rToken, _ := jwt.GenToken(u.UserID)
+	// 往Redis存放Token
+	if err := redis.AddToken(strconv.FormatUint(u.UserID, 10), aToken); err != nil {
+		zap.L().Error("user set token failed", zap.Error(err))
+		ResponseError(c, CodeServerWrong)
+		return
+	}
 	ResponseSuccess(c, gin.H{
 		"accessToken":  aToken,
 		"refreshToken": rToken,
@@ -61,7 +69,7 @@ func LoginHandler(c *gin.Context) {
 
 func RefreshTokenHandler(c *gin.Context) {
 	rt := c.Query("refresh_token")
-	// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URI
+	// 客户端携带Token有三种方式 1.放在请求头 2.放在请求体 3.放在URL
 	// 这里假设Token放在Header的Authorization中，并使用Bearer开头
 	// 这里的具体实现方式要依据你的实际业务情况决定
 	authHeader := c.Request.Header.Get("Authorization")

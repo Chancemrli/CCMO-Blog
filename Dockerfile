@@ -13,7 +13,7 @@ WORKDIR /build
 # 复制项目中的 go.mod 和 go.sum文件并下载依赖信息
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN go mod tidy
 
 # 将代码复制到容器中
 COPY . .
@@ -32,10 +32,20 @@ COPY ./conf /conf
 # 从builder镜像中把可执行文件拷贝到当前目录
 COPY --from=builder /build/bluebell /
 
+RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
+    echo "deb http://mirrors.163.com/debian/ stretch main non-free contrib" >/etc/apt/sources.list && \
+    echo "deb http://mirrors.163.com/debian/ stretch-updates main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb http://mirrors.163.com/debian/ stretch-backports main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb-src http://mirrors.163.com/debian/ stretch main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb-src http://mirrors.163.com/debian/ stretch-updates main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb-src http://mirrors.163.com/debian/ stretch-backports main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib" >>/etc/apt/sources.list && \
+    echo "deb-src http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib" >>/etc/apt/sources.list
+
 RUN set -eux \
     && apt-get update \
     && apt-get install -y --no-install-recommends netcat \
     && chmod 755 wait-for.sh
 
 # 需要运行的命令
-#ENTRYPOINT ["/bluebell", "conf/config.ini"]
+# ENTRYPOINT ["/bluebell", "conf/config.ini"]

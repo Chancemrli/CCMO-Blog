@@ -4,11 +4,16 @@ import (
 	"bluebell_backend/dao/mysql"
 	"bluebell_backend/dao/redis"
 	"bluebell_backend/models"
+	"bluebell_backend/pkg/errcode"
 	"bluebell_backend/pkg/snowflake"
 	"fmt"
+	"strconv"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 )
+
+var gsf singleflight.Group
 
 func CreatePost(post *models.Post) (err error) {
 	// 生成帖子ID
@@ -23,18 +28,9 @@ func CreatePost(post *models.Post) (err error) {
 		zap.L().Error("mysql.CreatePost(&post) failed", zap.Error(err))
 		return err
 	}
-	community, err := mysql.GetCommunityNameByID(fmt.Sprint(post.CommunityID))
+	_, err = mysql.GetCommunityNameByID(fmt.Sprint(post.CommunityID))
 	if err != nil {
 		zap.L().Error("mysql.GetCommunityNameByID failed", zap.Error(err))
-		return err
-	}
-	if err := redis.CreatePost(
-		fmt.Sprint(post.PostID),
-		fmt.Sprint(post.AuthorId),
-		post.Title,
-		TruncateByWords(post.Content, 120),
-		community.CommunityName); err != nil {
-		zap.L().Error("redis.CreatePost failed", zap.Error(err))
 		return err
 	}
 	return
@@ -42,23 +38,57 @@ func CreatePost(post *models.Post) (err error) {
 }
 
 func GetPost(postID string) (post *models.ApiPostDetail, err error) {
-	post, err = mysql.GetPostByID(postID)
+	var GetDataFromDB = func() (interface{}, error) {
+		// 从数据库获取
+		post, err := mysql.GetPostByID(postID)
+		if err != nil {
+			zap.L().Error("mysql.GetPostByID(postID) failed", zap.String("post_id", postID), zap.Error(err))
+			return nil, err
+		}
+		user, err := mysql.GetUserByID(fmt.Sprint(post.AuthorId))
+		if err != nil {
+			zap.L().Error("mysql.GetUserByID() failed", zap.String("author_id", fmt.Sprint(post.AuthorId)), zap.Error(err))
+			return nil, err
+		}
+		community, err := mysql.GetCommunityByID(fmt.Sprint(post.CommunityID))
+		if err != nil {
+			zap.L().Error("mysql.GetCommunityByID() failed", zap.String("community_id", fmt.Sprint(post.CommunityID)), zap.Error(err))
+			return nil, err
+		}
+		post.AuthorName = user.UserName
+		post.CommunityName = community.CommunityName
+
+		// 设置缓存
+		_, err = redis.SetHotArticle(*post)
+		if err != nil {
+			zap.L().Error("redis.SetHotArticle(*post) failed", zap.Error(err))
+		}
+		return post, nil
+	}
+
+	// 查找缓存
+	post, err = redis.GetArticleByID(postID)
 	if err != nil {
-		zap.L().Error("mysql.GetPostByID(postID) failed", zap.String("post_id", postID), zap.Error(err))
 		return nil, err
 	}
-	user, err := mysql.GetUserByID(fmt.Sprint(post.AuthorId))
-	if err != nil {
-		zap.L().Error("mysql.GetUserByID() failed", zap.String("author_id", fmt.Sprint(post.AuthorId)), zap.Error(err))
-		return
+	// 缓存层没有缓存该文章
+	if post.Title == "" {
+		// 合并请求
+		v, err, _ := gsf.Do("GetDetail:"+postID, GetDataFromDB)
+		if err != nil && err != mysql.ErrorInvalidID {
+			return nil, err
+		}
+
+		// 数据库为空，设置空缓存
+		if err == mysql.ErrorInvalidID {
+			redis.SetEmptyArticle(postID)
+			return nil, err
+		}
+		post = v.(*models.ApiPostDetail)
 	}
-	post.AuthorName = user.UserName
-	community, err := mysql.GetCommunityByID(fmt.Sprint(post.CommunityID))
-	if err != nil {
-		zap.L().Error("mysql.GetCommunityByID() failed", zap.String("community_id", fmt.Sprint(post.CommunityID)), zap.Error(err))
-		return
-	}
-	post.CommunityName = community.CommunityName
+	// 延长缓存TTL
+	redis.DelayTTL(redis.KeyHotArticlePrefix + postID)
+
 	return post, nil
 }
 
@@ -85,4 +115,18 @@ func GetPostList2() (data []*models.ApiPostDetail, err error) {
 		data = append(data, post)
 	}
 	return
+}
+
+func UpdatePostLogic(post models.UpdatePost) errcode.Status {
+	// 缓存淘汰策略：写后删
+	// 更新文章
+	if err := mysql.UpdatePost(post); err != nil {
+		return errcode.GetStatus(errcode.SQLRunTimeError)
+	}
+	// 删除缓存
+	postID := strconv.Itoa(int(post.PostID))
+	if err := redis.DelPostByID(postID); err != nil {
+		return errcode.GetStatus(errcode.RedisRunTimeError)
+	}
+	return errcode.GetStatus(errcode.AllOK)
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bluebell_backend/cron"
 	"bluebell_backend/dao/mysql"
 	"bluebell_backend/dao/redis"
+	"bluebell_backend/kafka"
 	"bluebell_backend/logger"
 	"bluebell_backend/pkg/snowflake"
 	"bluebell_backend/routers"
@@ -33,10 +35,18 @@ func main() {
 		return
 	}
 	defer redis.Close()
-	if err := snowflake.Init(1); err != nil {
+	if err := snowflake.Init(settings.Conf.MachineID); err != nil {
 		fmt.Printf("init snowflake failed, err:%v\n", err)
 		return
 	}
+	// kafka初始化
+	kafka.InitKafkaProducer()
+	kafka.InitKafkaConsumer()
+	go kafka.Consume(kafka.ReaderForP0)
+	go kafka.Consume(kafka.ReaderForP1)
+	defer kafka.Close()
+	// 定时任务
+	cron.InitCron()
 	// 注册路由
 	r := routers.SetupRouter()
 	err := r.Run(fmt.Sprintf(":%d", settings.Conf.Port))

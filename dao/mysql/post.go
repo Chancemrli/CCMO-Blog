@@ -2,7 +2,10 @@ package mysql
 
 import (
 	"bluebell_backend/models"
+	"bluebell_backend/pkg/util"
 	"database/sql"
+	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -24,10 +27,10 @@ func CreatePost(post *models.Post) (err error) {
 	return
 }
 
-//GetPostByID
+// GetPostByID
 func GetPostByID(idStr string) (post *models.ApiPostDetail, err error) {
 	post = new(models.ApiPostDetail)
-	sqlStr := `select post_id, title, content, author_id, community_id, create_time
+	sqlStr := `select post_id, title, content, author_id, community_id, create_time, like_count, unlike_count
 	from post
 	where post_id = ?`
 	err = db.Get(post, sqlStr, idStr)
@@ -67,4 +70,35 @@ func GetPostList() (posts []*models.ApiPostDetail, err error) {
 	err = db.Select(&posts, sqlStr)
 	return
 
+}
+
+func UpdatePost(post models.UpdatePost) error {
+	// 使用预编译语句以避免 SQL 注入
+	sqlStr := "update post set title = ?, content = ?, status = ? where post_id = ?"
+
+	// 执行数据库更新
+	if _, err := db.Exec(sqlStr, post.Title, post.Content, post.Status, post.PostID); err != nil {
+		return ErrorUpdateFailed
+	}
+
+	return nil
+}
+
+type ScoreModel struct {
+	PostID      string    `db:"post_id"`
+	CreateTime  time.Time `db:"create_time"`
+	LikeCount   int       `db:"like_count"`
+	UnlikeCount int       `db:"unlike_count"`
+}
+
+func UpdateScore() {
+	scoreModel := make([]ScoreModel, 0)
+	sqlStr := "select post_id,create_time,like_count,unlike_count from post"
+	db.Select(&scoreModel, sqlStr)
+
+	for _, score := range scoreModel {
+		totalScore := int64(util.Hot(score.LikeCount, score.UnlikeCount, score.CreateTime))
+		updateSqlStr := fmt.Sprintf("update post set score = %d where post_id = '%s'", totalScore, score.PostID)
+		db.Exec(updateSqlStr)
+	}
 }

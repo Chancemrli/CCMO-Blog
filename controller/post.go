@@ -4,6 +4,7 @@ import (
 	"bluebell_backend/dao/redis"
 	"bluebell_backend/logic"
 	"bluebell_backend/models"
+	"bluebell_backend/pkg/errcode"
 	"fmt"
 	"strconv"
 
@@ -75,4 +76,44 @@ func PostDetailHandler(c *gin.Context) {
 	}
 
 	ResponseSuccess(c, post)
+}
+
+func UpdatePostHandler(ctx *gin.Context) {
+	postID := ctx.Param("id")
+	// 获取更新内容
+	detail := models.UpdatePost{}
+	if err := ctx.ShouldBindJSON(&detail); err != nil {
+		status := errcode.GetStatus(errcode.ProgramError)
+		ctx.JSON(errcode.GetHttpCode(status.Code), gin.H{
+			"status": status,
+		})
+		return
+	}
+	detail.PostID, _ = strconv.ParseUint(postID, 10, 64)
+
+	// 获取当前用户ID
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		status := errcode.GetStatus(errcode.ProgramError)
+		ctx.JSON(errcode.GetHttpCode(status.Code), gin.H{
+			"status": status,
+		})
+		return
+	}
+
+	// 比对当前用户信息
+	if userID != detail.AuthorId {
+		status := errcode.GetStatus(errcode.PermissionDenied)
+		ctx.JSON(errcode.GetHttpCode(status.Code), gin.H{
+			"status": status,
+		})
+		return
+	}
+
+	status := logic.UpdatePostLogic(detail)
+
+	ctx.JSON(errcode.GetHttpCode(status.Code), gin.H{
+		"status": status,
+		"data":   "update post success",
+	})
 }

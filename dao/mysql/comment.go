@@ -2,8 +2,7 @@ package mysql
 
 import (
 	"bluebell_backend/models"
-
-	"github.com/jmoiron/sqlx"
+	"strconv"
 
 	"go.uber.org/zap"
 )
@@ -22,17 +21,18 @@ func CreateComment(comment *models.Comment) (err error) {
 	return
 }
 
-func GetCommentListByIDs(ids []string) (commentList []*models.Comment, err error) {
+func GetCommentListByIDs(postID string) (commentList []*models.Comment, err error) {
 	sqlStr := `select comment_id, content, post_id, author_id, parent_id, create_time
 	from comment
-	where comment_id in (?)`
+	where post_id = ?`
 	// 动态填充id
-	query, args, err := sqlx.In(sqlStr, ids)
+	id, _ := strconv.ParseInt(postID, 10, 64)
+	err = db.Select(&commentList, sqlStr, id)
 	if err != nil {
 		return
 	}
-	// sqlx.In 返回带 `?` bindvar的查询语句, 我们使用Rebind()重新绑定它
-	query = db.Rebind(query)
-	err = db.Select(&commentList, query, args...)
+
+	// query = db.Rebind(query)
+	// err = db.Select(&commentList, query, args...)
 	return
 }

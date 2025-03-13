@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -14,25 +15,25 @@ const (
 )
 
 /*
-投票算法：http://www.ruanyifeng.com/blog/2012/03/ranking_algorithm_reddit.html
+	PostVote 为帖子投票
 
-
-
-*/
-
-/* PostVote 为帖子投票
 投票分为四种情况：1.投赞成票 2.投反对票 3.取消投票 4.反转投票
 
 记录文章参与投票的人
 更新文章分数：赞成票要加分；反对票减分
 
 v=1时，有两种情况
+
 	1.之前没投过票，现在要投赞成票
 	2.之前投过反对票，现在要改为赞成票
+
 v=0时，有两种情况
+
 	1.之前投过赞成票，现在要取消
 	2.之前投过反对票，现在要取消
+
 v=-1时，有两种情况
+
 	1.之前没投过票，现在要投反对票
 	2.之前投过赞成票，现在要改为反对票
 */
@@ -90,14 +91,13 @@ func CreatePost(postID, userID, title, summary, communityName string) (err error
 		"comments": 0,
 	}
 
-	// 事务操作
+	// 事务操作，保证事务原子性
 	pipeline := client.TxPipeline()
 	pipeline.ZAdd(votedKey, redis.Z{ // 作者默认投赞成票
 		Score:  1,
 		Member: userID,
 	})
 	pipeline.Expire(votedKey, time.Second*OneWeekInSeconds) // 一周时间
-
 	pipeline.HMSet(KeyPostInfoHashPrefix+postID, postInfo)
 	pipeline.ZAdd(KeyPostScoreZSet, redis.Z{ // 添加到分数的ZSet
 		Score:  now + VoteScore,
@@ -143,19 +143,11 @@ func GetCommunityPost(communityName, orderKey string, page int64) []map[string]s
 	return GetPost(key, page)
 }
 
-// Reddit Hot rank algorithms
-// from https://github.com/reddit-archive/reddit/blob/master/r2/r2/lib/db/_sorts.pyx
-func Hot(ups, downs int, date time.Time) float64 {
-	s := float64(ups - downs)
-	order := math.Log10(math.Max(math.Abs(s), 1))
-	var sign float64
-	if s > 0 {
-		sign = 1
-	} else if s == 0 {
-		sign = 0
-	} else {
-		sign = -1
+func DelPostByID(postID string) error {
+	key := KeyHotArticlePrefix + postID
+	if _, err := client.Del(key).Result(); err != nil {
+		fmt.Println("depostbyid errors")
+		return ErrorRedisRunTimeError
 	}
-	seconds := float64(date.Second() - 1577808000)
-	return math.Round(sign*order + seconds/43200)
+	return nil
 }

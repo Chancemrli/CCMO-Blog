@@ -5,12 +5,18 @@ package redis
 */
 
 const (
-	KeyPostInfoHashPrefix = "bluebell:post:"
-	KeyPostTimeZSet       = "bluebell:post:time"
-	KeyPostScoreZSet      = "bluebell:post:score"
-	//KeyPostVotedUpSetPrefix   = "bluebell:post:voted:down:"
-	//KeyPostVotedDownSetPrefix = "bluebell:post:voted:up:"
-	KeyPostVotedZSetPrefix = "bluebell:post:voted:"
+	KeyPostInfoHashPrefix = "ccmo:post:"
+	KeyPostTimeZSet       = "ccmo:post:time"
+	KeyPostScoreZSet      = "ccmo:post:score"
+	//KeyPostVotedUpSetPrefix   = "ccmo:post:voted:down:"
+	//KeyPostVotedDownSetPrefix = "ccmo:post:voted:up:"
+	KeyPostVotedZSetPrefix = "ccmo:post:voted:"
 
-	KeyCommunityPostSetPrefix = "bluebell:community:"
+	KeyCommunityPostSetPrefix = "ccmo:community:"
+
+	KeyHotArticlesMap   = "cache:post:hot"
+	KeyHotArticlePrefix = "cache:post:hot:"
+
+	MinExpireTime = 300 // seconds
+	MaxExpireTime = 480 // seconds
 )

@@ -1,5 +1,7 @@
 mode: "dev"
 port: 8081
+token_expiretime: 3600 #second
+machine_id: 1
 
 log:
   level: "debug"
@@ -10,14 +12,15 @@ log:
 
 mysql:
   host: 127.0.0.1
-  port: 13306
+  port: 23306
   user: root
   password: root1234
-  db: bluebell_pre
+  db: CCMO
   max_open_conns: 100
   max_idle_conns: 20
 
 redis:
   host: 127.0.0.1
-  port: 16379
+  port: 6379
+  password: dgchaoren123
   db: 0

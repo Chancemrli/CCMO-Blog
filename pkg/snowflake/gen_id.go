@@ -19,7 +19,8 @@ func getMachineID() (uint16, error) {
 // 需传入当前的机器ID
 func Init(machineId uint16) (err error) {
 	sonyMachineID = machineId
-	t, _ := time.Parse("2006-01-02", "2020-01-01")
+	// 解析时间字符串成time.Time对象
+	t, _ := time.Parse("2006-01-02", "2024-09-01")
 	settings := sonyflake.Settings{
 		StartTime: t,
 		MachineID: getMachineID,
