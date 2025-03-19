@@ -1,0 +1,23 @@
+Name: applet-api
+Host: 0.0.0.0
+Port: 8888
+
+# 统一三天
+Auth:
+  AccessSecret: CCMOJackKey
+  AccessExpire: 259200
+  RefreshSecret: CCMOJackKey
+  RefreshExpire: 259200
+  RefreshAfter: 259200
+
+UserRPC:
+  Etcd:
+    Hosts: 
+      - localhost:2379
+    Key: user.rpc
+  NonBlog: true
+
+BizRedis:
+  Host: localhost:6379
+  Pass: dgchaoren123
+  

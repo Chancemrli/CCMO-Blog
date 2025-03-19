@@ -1,0 +1,30 @@
+Name: user.rpc
+ListenOn: 0.0.0.0:8080
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: user.rpc
+
+DataSource: root:dgchaoren123@tcp(localhost:3306)/beyond_user?charset=utf8mb4&parseTime=true&loc=Local
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: dgchaoren123
+
+BizRedis:
+  Host: localhost:6379
+  Pass: dgchaoren123
+  Type: node
+
+Consul:
+  Host: localhost:8500
+  Key: user-rpc
+  Meta:
+    env: test
+    service_group: beyond
+    service_name: user-rpc
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9910
+  Path: /metrics

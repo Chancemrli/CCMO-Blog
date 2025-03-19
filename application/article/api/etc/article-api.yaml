@@ -1,0 +1,30 @@
+Name: article-api
+Host: 0.0.0.0
+Port: 80
+Auth:
+  AccessSecret: CCMOJackKey
+  AccessExpire: 259200
+  RefreshSecret: CCMOJackKey
+  RefreshExpire: 259200
+  RefreshAfter: 259200
+Oss:
+  Endpoint: oss-cn-shanghai.aliyuncs.com
+  AccessKeyId: xxxxxxxxxxxxxxxxxxxx
+  AccessKeySecret: xxxxxxxxxxxxxxxxxxxx
+  BucketName: beyond-article
+ArticleRPC:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: article.rpc
+  NonBlock: true
+UserRPC:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: user.rpc
+  NonBlock: true
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9911
+  Path: /metrics
