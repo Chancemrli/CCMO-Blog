@@ -13,6 +13,7 @@ type Config struct {
 	}
 	ArticleRPC zrpc.RpcClientConf
 	UserRPC    zrpc.RpcClientConf
+	EggRPC     zrpc.RpcClientConf
 	Oss        struct {
 		Endpoint         string
 		AccessKeyId      string

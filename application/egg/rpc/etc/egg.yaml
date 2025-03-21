@@ -1,0 +1,17 @@
+Name: egg.rpc
+ListenOn: 0.0.0.0:8080
+Etcd:
+  Hosts:
+  - 192.168.237.137:3379
+  Key: egg.rpc
+
+User:
+  UserID: 10086
+  Username: Egg
+  Password: ccmo-egg
+
+# 令牌
+PAT: "pat_47yGCrMq89u18fEwLXsVawDPArWPBHgVyzEnJt2YSXwearg68LQ2T57Zl04EdqSW"
+# 工作流ID
+WID: "7484100103276740660"
+INPUT: "input"

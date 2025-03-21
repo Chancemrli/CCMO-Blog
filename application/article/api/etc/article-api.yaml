@@ -8,6 +8,7 @@ Auth:
   RefreshExpire: 259200
   RefreshAfter: 259200
 Oss:
+#根据自己的阿里云id和secret修改
   Endpoint: oss-cn-shanghai.aliyuncs.com
   AccessKeyId: xxxxxxxxxxxxxxxxxxxx
   AccessKeySecret: xxxxxxxxxxxxxxxxxxxx
@@ -15,14 +16,20 @@ Oss:
 ArticleRPC:
   Etcd:
     Hosts:
-      - 127.0.0.1:2379
+      - 192.168.237.137:3379
     Key: article.rpc
   NonBlock: true
 UserRPC:
   Etcd:
     Hosts:
-      - 127.0.0.1:2379
+      - 192.168.237.137:3379
     Key: user.rpc
+  NonBlock: true
+EggRPC:
+  Etcd:
+    Hosts:
+      - 192.168.237.137:3379
+    Key: egg.rpc
   NonBlock: true
 Prometheus:
   Host: 0.0.0.0

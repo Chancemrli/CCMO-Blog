@@ -1,16 +1,16 @@
 Name: article-rpc
 ListenOn: 0.0.0.0:9090
-DataSource: root:123456@tcp(10.111.196.140:3306)/beyond_article?parseTime=true&loc=Local
+DataSource: root:dgchaoren123@tcp(192.168.237.137:13306)/beyond_article?parseTime=true&loc=Local
 CacheRedis:
-  - Host: 10.103.107.10:6379
+  - Host: 192.168.237.137:16379
     Pass:
     Type: node
 BizRedis:
-  Host: 10.103.107.10:6379
+  Host: 10.103.107.10:16379
   Pass:
   Type: node
 Consul:
-  Host: 127.0.0.1:8500
+  Host: 192.168.237.137:8500
   Key: article-rpc
   Meta:
     env: test

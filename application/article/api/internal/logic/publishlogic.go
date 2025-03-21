@@ -8,6 +8,7 @@ import (
 	"CCMO/gozero/blog/application/article/api/internal/svc"
 	"CCMO/gozero/blog/application/article/api/internal/types"
 	"CCMO/gozero/blog/application/article/rpc/pb"
+	"CCMO/gozero/blog/application/egg/rpc/egg"
 	"CCMO/gozero/blog/pkg/xcode"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -54,6 +55,15 @@ func (l *PublishLogic) Publish(req *types.PublishRequest) (*types.PublishRespons
 	})
 	if err != nil {
 		logx.Errorf("l.svcCtx.ArticleRPC.Publish req: %v userId: %d error: %v", req, userId, err)
+		return nil, err
+	}
+
+	_, err = l.svcCtx.EggRPC.Comment(l.ctx, &egg.EggRequest{
+		Content: req.Content,
+	})
+
+	if err != nil {
+		logx.Errorf("l.svcCtx.EggRPC.Comment error: %v", err)
 		return nil, err
 	}
 
