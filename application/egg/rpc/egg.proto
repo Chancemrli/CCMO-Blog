@@ -4,7 +4,9 @@ package egg;
 option go_package="./egg";
 
 message EggRequest {
-  string content = 1;
+  int64 articleId = 1;
+  int64 authorId = 2;
+  string content = 3;
 }
 
 message EggResponse {

@@ -5,13 +5,15 @@ Etcd:
   - 192.168.237.137:3379
   Key: egg.rpc
 
+DataSource: root:dgchaoren123@tcp(192.168.237.137:13306)/beyond_reply?parseTime=true&loc=Local
+
 User:
   UserID: 10086
   Username: Egg
   Password: ccmo-egg
 
 # 令牌
-PAT: "pat_47yGCrMq89u18fEwLXsVawDPArWPBHgVyzEnJt2YSXwearg68LQ2T57Zl04EdqSW"
+PAT: "xxxx"
 # 工作流ID
-WID: "7484100103276740660"
+WID: "xxxx"
 INPUT: "input"

@@ -58,8 +58,11 @@ func (l *PublishLogic) Publish(req *types.PublishRequest) (*types.PublishRespons
 		return nil, err
 	}
 
+	// Egg发表评论，异步？
 	_, err = l.svcCtx.EggRPC.Comment(l.ctx, &egg.EggRequest{
-		Content: req.Content,
+		ArticleId: pret.ArticleId,
+		AuthorId:  userId,
+		Content:   req.Content,
 	})
 
 	if err != nil {

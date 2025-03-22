@@ -4,7 +4,13 @@ import "github.com/zeromicro/go-zero/zrpc"
 
 type Config struct {
 	zrpc.RpcServerConf
-	PAT   string
-	WID   string
-	InPut string
+	User struct {
+		UserID   uint64
+		Username string
+		Password string
+	}
+	PAT        string
+	WID        string
+	InPut      string
+	DataSource string
 }

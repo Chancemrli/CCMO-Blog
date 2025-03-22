@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"CCMO/gozero/blog/application/egg/rpc/egg"
+	"CCMO/gozero/blog/application/egg/rpc/internal/model"
 	"CCMO/gozero/blog/application/egg/rpc/internal/svc"
 	"CCMO/gozero/blog/pkg/agent/coze/message"
 
@@ -41,6 +42,12 @@ func (l *CommentLogic) Comment(in *egg.EggRequest) (*egg.EggResponse, error) {
 	}
 
 	// todo:入库
+	l.svcCtx.ReplyModel.Insert(l.ctx, &model.Reply{
+		TargetId:      uint64(in.ArticleId),
+		ReplyUserId:   l.svcCtx.Config.User.UserID,
+		BeReplyUserId: uint64(in.AuthorId),
+		Content:       comment,
+	})
 
 	return &egg.EggResponse{
 		Comment: comment,
